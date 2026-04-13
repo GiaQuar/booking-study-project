@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "node": "^25.9.0",
+    "pg": "^8.20.0"
+  },
+  "name": "booking-study-project",
+  "version": "1.0.0",
+  "description": "Monorepo for my full-stack study project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GiaQuar/booking-study-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/GiaQuar/booking-study-project/issues"
+  },
+  "homepage": "https://github.com/GiaQuar/booking-study-project#readme"
+}
