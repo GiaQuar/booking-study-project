@@ -24,5 +24,6 @@
   "bugs": {
     "url": "https://github.com/GiaQuar/booking-study-project/issues"
   },
-  "homepage": "https://github.com/GiaQuar/booking-study-project#readme"
+  "homepage": "https://github.com/GiaQuar/booking-study-project#readme",
+  "devDependencies": {}
 }
