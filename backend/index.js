@@ -25,11 +25,19 @@ const db = new pg.Client({
 
 db.connect();
 
+let print;
+
+
+// Middleware
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("../frontend/public"));
 
+// get route homepage
 app.get("/", async (req, res) => {
-    res.render("index.ejs")
+    // print hello world form DB
+    const result = await db.query("SELECT message FROM messages WHERE id=1");
+    const helloWorld = result.rows[0].message;
+    res.render("index.ejs", {messages: helloWorld});
 });
 
 
