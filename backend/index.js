@@ -70,13 +70,19 @@ app.get("/login", (req, res) => {
 });
 
 // get route pacchetti 
-app.get("/pacchetti", (req, res) => {
+app.get("/pacchetti", async (req, res) => {
     if (req.isAuthenticated()) {
-        res.render("pacchetti.ejs"); // TODO: change this
+        const result = await db.query(
+            "SELECT * FROM pacchetti"
+        )
+        const pacchetti = result.rows;
+        res.render("pacchetti.ejs", {pacchetto: pacchetti}); // TODO: change this
     } else {
         res.redirect("/login");
     }  
 });
+
+
 
 // get route bookings:id 
 app.get("/booking/:id", async (req, res) => {
