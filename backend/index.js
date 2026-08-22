@@ -106,8 +106,13 @@ app.get("/booking/:id", async (req, res) => {
 
 // post register
 app.post("/register", async (req, res) => {
+
+    const name = req.body.name;
+    const surname = req.body.surname;
     const email = req.body.email;
     const password = req.body.password;
+    console.log("name:", name);
+    console.log("surname:", surname);
     console.log("email:", email);
     console.log("password:", password);
 
@@ -125,8 +130,8 @@ app.post("/register", async (req, res) => {
             console.log("Error hashing password:", err);
             } else {
             await db.query(
-                "INSERT INTO utente (email, password) VALUES ($1, $2)",
-                [email, hash]
+                "INSERT INTO utente (nome, cognome, email, password) VALUES ($1, $2, $3, $4)",
+                [name, surname, email, hash]
             );
             res.render("register.ejs"); // TODO: add a success message
             // when registration completes correctly
@@ -179,9 +184,56 @@ app.patch("/booking/:id", async (req, res) => {
     }
 })
 
+app.post("/bookings", async (req,res) => {
+    if (req.isAuthenticated()) {
+        const name = req.user.name;
+        console.log(name);
+        const username = req.user.username;
+        console.log(username);
+        const email = req.user.email;
+        console.log(email);
+        const idUtente = req.user.id;
+        console.log(idUtente);
+        
+        try {
+            const idPacchetto = req.body.id_pacchetto;
+            const dataInizio = req.body.data_inizio;
+            const numeroPersone = req.body.numero_persone;
+
+
+            const pacchetto = await db.query(
+                "SELECT durata FROM pacchetti WHERE id = $1",
+                [idPacchetto]
+            );
+            const durata = pacchetto.rows[0].durata;
+            const dataFine = addDays(dataInizio, durata);
+
+
+            const result = await db.query(
+                "INSERT INTO prenotazioni (id_utente, id_pacchetto, data_inizio, data_fine, numero_persone, stato) VALUES($1,$2,$3,$4,$5, 'in_transit')",
+                [idUtente, idPacchetto, dataInizio, dataFine, numeroPersone]
+            );
+        } catch (err) {
+            console.log(err);
+        }
+
+
+    } else {
+        res.redirect("/login");
+    } 
+});
+
+
+function addDays(date, days) {
+  var result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+
 passport.use(new Strategy({ usernameField: "email" },
     async function Verify(email, password, cb){
-
+        console.log("Strategy chiamata con email:", email);
     try {
       const result = await db.query("SELECT * FROM utente WHERE email = $1",
         [email]
