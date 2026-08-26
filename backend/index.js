@@ -85,21 +85,30 @@ app.get("/pacchetti", async (req, res) => {
 
 
 // get route bookings:id 
-app.get("/booking/:id", async (req, res) => {
-    try {
+app.get("/bookings", async (req, res) => {
+
+    if(req.isAuthenticated()){
+        const id = req.user.id;
+        const name = req.user.nome;
+        const cognome = req.user.cognome;
+        const email = req.user.email;
+        try {
         const result = await db.query(
-            "SELECT * FROM utente WHERE id = $1",
-            [req.params.id]
+            "SELECT * FROM prenotazioni JOIN pacchetti ON prenotazioni.id_pacchetto = pacchetti.id WHERE prenotazioni.id_utente = $1",
+            [id]
         );
 
         if (result.rows.length > 0) {
-            res.render("booking.ejs", {name: result.rows[0].nome})
+            res.render("booking.ejs", {tipo: result.rows[0].tipo, name: name, surname: cognome, email: email});
         } else {
             res.status(404).send("prenotazione non trovata");
         }
 
     } catch (err) {
         console.log(err);
+    }
+    } else {
+        res.redirect("/login");
     }
 });
 
@@ -150,40 +159,7 @@ app.post("/login", passport.authenticate("local", {
   failureRedirect: "/login"
 }));
 
-app.patch("/booking/:id", async (req, res) => {
-    try {
-        const result = await db.query(
-            "SELECT * FROM utente WHERE id = $1",
-            [req.params.id]
-        );
-
-        // const replacementBooking = {
-        //         id: result.id,
-        //         id_utente: result.id_utente,
-        //         id_disponibilita: result.id_disponibilita,
-        //         data_prenotazione: req.body.dataPrenotazione,
-        //         data_fine: result.data_fine,
-        //         numero_persone: req.body.numeroPersone,
-        //         stato: result.stato
-        //     }
-
-        if (result.rows.length > 0) {
-            const booking = result.rows[0];
-            console.log(booking);
-
-            const updates = req.body;
-            for (let key in updates) {
-                if (booking[key] !== undefined) {
-                    booking[key] = updates[key];
-                }
-            }
-        }
-
-    } catch (err) {
-        console.log(err);
-    }
-})
-
+// post BOOKINGS
 app.post("/bookings", async (req,res) => {
     if (req.isAuthenticated()) {
         const name = req.user.name;
@@ -222,6 +198,57 @@ app.post("/bookings", async (req,res) => {
         res.redirect("/login");
     } 
 });
+
+
+// route PATCH bookings/:id
+app.patch("/bookings/:id", async (req, res) => {
+    if(req.isAuthenticated()) {
+
+        const idPrenotazione = req.params.id;
+        const id = req.user.id;
+        const newData_inizio = req.body.dataInizio;
+        const newIdPacchetto = req.body.newIdPacchetto; // convertire nome con id da Front-end
+        const newNumeroPersone = req.body.numeroPersone;
+        
+        try {
+            const join = await db.query(
+            "SELECT * FROM prenotazioni JOIN pacchetti ON prenotazioni.id_pacchetto = pacchetti.id WHERE prenotazioni.id_utente = $1",
+            [id]
+        );
+        const dataFine = addDays(newData_inizio, join.rows[0].durata);
+
+            const result = await db.query(
+            "UPDATE prenotazioni SET id_pacchetto = $1, data_inizio = $2, data_fine = $3, numero_persone = $4 WHERE id = $5 AND id_utente = $6",
+            [newIdPacchetto, newData_inizio, dataFine, newNumeroPersone, idPrenotazione, id]
+        );
+
+        res.redirect("/pacchetti");
+        } catch (err) {
+            console.log(err);
+        }
+    } else {
+        res.redirect("/login");
+    }
+})
+
+
+app.delete("/bookings/:id", async (req, res) => {
+    if(req.isAuthenticated()) {
+        try {
+            const idPrenotazione = req.params.id;
+            const idUtente = req.user.id;
+            const result = await db.query(
+                "DELETE FROM prenotazioni WHERE id = $1 AND id_utente = $2",
+                [idPrenotazione, idUtente]
+            )
+        } catch (err) {
+            console.log(err);
+        }
+    } else {
+        res.redirect("/login");
+    }
+});
+
 
 
 function addDays(date, days) {
